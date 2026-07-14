@@ -1,0 +1,23 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+
+# 파이프라인 실행 시 생성되는 에셋/결과물
+assets/
+output/
+*TEMP_MPY_wvf_snd.mp4
+
+# 손상된 폰트 파일 (CLAUDE.md 참고 — 코드가 맑은 고딕으로 폴백함)
+NanumGothic.ttf
+
+# Claude Code 로컬 설정
+.claude/settings.local.json

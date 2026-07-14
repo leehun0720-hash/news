@@ -1,0 +1,6 @@
+{
+  "name": "News to Video Script Engine",
+  "description": "Python module for generating video scripts from news articles using Gemini 1.5 Flash.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
