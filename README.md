@@ -36,6 +36,14 @@ npm run dev   # http://localhost:3000
 
 설정 탭의 **연결 상태 확인하기** 버튼으로 각 키가 정상 동작하는지 미리 검증할 수 있습니다.
 
+## Windows 설치 파일 만들기
+
+```bash
+npm run dist:win
+```
+
+`release/NEWSCUT Setup 1.0.0.exe` 인스톨러가 생성됩니다. 설치된 앱은 Node.js·Python 없이 단독 실행되며(Electron + PyInstaller 번들), 생성된 영상 등 작업 파일은 `%APPDATA%\NEWSCUT\work`에 저장됩니다.
+
 ## 기술 스택
 
 - **프런트엔드**: React 19 + Vite + Tailwind CSS 4

@@ -21,3 +21,8 @@ NanumGothic.ttf
 
 # Claude Code 로컬 설정
 .claude/settings.local.json
+
+# 패키징 빌드 산출물
+dist-py/
+release/
+*.spec

@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { spawn } from "child_process";
 import fs from "fs";
 
@@ -12,11 +11,14 @@ let currentJob: any = {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
+  // 패키징된 앱에서는 설치 폴더가 아닌 쓰기 가능한 데이터 폴더에서 작업
+  const workDir = process.env.APP_DATA_DIR || process.cwd();
+  fs.mkdirSync(workDir, { recursive: true });
   app.use(express.json());
 
   // Serve the output directory statically so the frontend can play the video
-  app.use("/output", express.static(path.join(process.cwd(), "output")));
+  app.use("/output", express.static(path.join(workDir, "output")));
 
   app.get("/api/status", (req, res) => {
     res.json(currentJob);
@@ -105,17 +107,22 @@ async function startServer() {
     };
     
     console.log("Starting Python pipeline...");
-    // Run the Python pipeline (prefer the project venv's interpreter)
-    const venvPython =
-      process.platform === "win32"
-        ? path.join(process.cwd(), ".venv", "Scripts", "python.exe")
-        : path.join(process.cwd(), ".venv", "bin", "python");
-    const pythonCmd = fs.existsSync(venvPython)
-      ? venvPython
-      : process.platform === "win32"
-        ? "python"
-        : "python3";
-    const pythonProcess = spawn(pythonCmd, ["pipeline.py"], { env });
+    // 패키징된 앱은 PyInstaller로 빌드된 pipeline.exe를, 개발 환경은 venv Python을 사용
+    let pythonProcess;
+    if (process.env.PIPELINE_EXE && fs.existsSync(process.env.PIPELINE_EXE)) {
+      pythonProcess = spawn(process.env.PIPELINE_EXE, [], { env, cwd: workDir });
+    } else {
+      const venvPython =
+        process.platform === "win32"
+          ? path.join(process.cwd(), ".venv", "Scripts", "python.exe")
+          : path.join(process.cwd(), ".venv", "bin", "python");
+      const pythonCmd = fs.existsSync(venvPython)
+        ? venvPython
+        : process.platform === "win32"
+          ? "python"
+          : "python3";
+      pythonProcess = spawn(pythonCmd, [path.join(process.cwd(), "pipeline.py")], { env, cwd: workDir });
+    }
     
     // Return immediately to prevent 503 timeout
     res.json({ success: true, message: "Pipeline started" });
@@ -166,20 +173,23 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    // 프로덕션 번들에 vite가 포함되지 않도록 동적 import
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
+    // 빌드 시 server.cjs와 프런트엔드 정적 파일이 같은 dist/ 폴더에 위치
+    const distPath = process.env.STATIC_DIR || __dirname;
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
-  
-  app.listen(PORT, "0.0.0.0", () => {
+
+  app.listen(PORT, "127.0.0.1", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

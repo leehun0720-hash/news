@@ -67,5 +67,18 @@ async def main():
         "video_path": video_path
     }))
 
+def selftest():
+    """패키징 검증용: 모든 핵심 의존성이 로드되는지 확인"""
+    import moviepy
+    import video_composer
+    from google import genai
+    import openai
+    import gtts
+    import imageio_ffmpeg
+    print(f"SELFTEST_OK moviepy={moviepy.__version__} ffmpeg={imageio_ffmpeg.get_ffmpeg_exe()} font={video_composer.FONT_PATH}")
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    if "--selftest" in sys.argv:
+        selftest()
+    else:
+        asyncio.run(main())
